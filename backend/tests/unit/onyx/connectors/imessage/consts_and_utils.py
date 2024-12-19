@@ -9,7 +9,7 @@ MOCK_MESSAGE_DATA: Dict[str, List[Dict[str, Any]]] = {
             "ROWID": 1,
             "text": "Hello world",
             "attributedBody": None,  # Will be populated with hex-encoded data in actual db
-            "date": int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()),
+            "date": int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1e9),  # Convert to nanoseconds
             "is_from_me": 0,
             "handle_id": 1,
             "cache_has_attachments": 0,
@@ -19,7 +19,7 @@ MOCK_MESSAGE_DATA: Dict[str, List[Dict[str, Any]]] = {
             "ROWID": 2,
             "text": "How are you?",
             "attributedBody": None,
-            "date": int(datetime(2024, 1, 1, 1, tzinfo=timezone.utc).timestamp()),
+            "date": int(datetime(2024, 1, 1, 1, tzinfo=timezone.utc).timestamp() * 1e9),  # Convert to nanoseconds
             "is_from_me": 1,
             "handle_id": 1,
             "cache_has_attachments": 0,
