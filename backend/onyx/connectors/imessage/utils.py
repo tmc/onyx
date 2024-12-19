@@ -37,7 +37,7 @@ def create_document_from_chat(chat_data: dict[str, Any], messages: list[dict[str
         # First try to get text from attributedBody, fall back to text field
         text = decode_attributed_body(msg.get("attributedBody")) or msg.get("text", "")
         sender = "Me" if msg.get("is_from_me") else msg.get("sender", "Unknown")
-        timestamp = datetime.fromtimestamp(msg.get("date", 0))  # Remove 1e9 division as mock data uses regular timestamps
+        timestamp = datetime.fromtimestamp(msg.get("date", 0) / 1e9)  # Convert nanoseconds to seconds
 
         section_text = f"{sender} ({timestamp.strftime('%Y-%m-%d %H:%M:%S')}): {text}"
         sections.append(Section(text=section_text, link=None))
@@ -52,6 +52,6 @@ def create_document_from_chat(chat_data: dict[str, Any], messages: list[dict[str
             "participant_count": str(len(set(m.get("sender", "") for m in messages))),
         },
         doc_updated_at=datetime.fromtimestamp(
-            max(m.get("date", 0) for m in messages)  # Remove 1e9 division here too
+            max(m.get("date", 0) for m in messages) / 1e9  # Convert nanoseconds to seconds
         ) if messages else None
     )
