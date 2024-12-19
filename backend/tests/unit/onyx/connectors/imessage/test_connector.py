@@ -12,7 +12,7 @@ from tests.unit.onyx.connectors.imessage.consts_and_utils import MOCK_MESSAGE_DA
 
 def test_message_to_document():
     """Test that messages are correctly converted to documents."""
-    with patch('sqlite3.connect') as mock_connect:
+    with patch("sqlite3.connect") as mock_connect:
         # Setup mock cursor with properly joined data
         mock_cursor = MagicMock()
         mock_cursor.execute = MagicMock()
@@ -52,7 +52,7 @@ def test_message_to_document():
 
 def test_time_filter():
     """Test that time-based filtering works correctly."""
-    with patch('sqlite3.connect') as mock_connect:
+    with patch("sqlite3.connect") as mock_connect:
         # Setup mock cursor with properly joined data
         mock_cursor = MagicMock()
         mock_cursor.execute = MagicMock()
@@ -88,14 +88,14 @@ def test_time_filter():
 
 def test_database_not_found():
     """Test graceful handling when chat.db is not accessible."""
-    with patch('sqlite3.connect', side_effect=Exception("Database not found")):
+    with patch("sqlite3.connect", side_effect=Exception("Database not found")):
         connector = IMessageConnector()
         docs = list(connector.load_from_state())
         assert len(docs) == 0
 
 def test_invalid_message_data():
     """Test handling of invalid message data."""
-    with patch('sqlite3.connect') as mock_connect:
+    with patch("sqlite3.connect") as mock_connect:
         # Setup mock cursor with invalid data
         mock_cursor = MagicMock()
         mock_cursor.fetchall.side_effect = [

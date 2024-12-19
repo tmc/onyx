@@ -30,7 +30,7 @@ class IMessageConnector(LoadConnector, PollConnector):
 
     def _load_messages(
         self, start_time: float | None = None, end_time: float | None = None
-    ) -> Iterator[Document]:  # Updated return type annotation
+    ) -> Iterator[Document]:
         if not self.db_path:
             return
 
@@ -104,8 +104,8 @@ class IMessageConnector(LoadConnector, PollConnector):
                 self.conn.close()
                 self.conn = None
 
-    def load_from_state(self) -> Iterator[Document]:  # Updated return type annotation
+    def load_from_state(self) -> Iterator[Document]:
         yield from self._load_messages()
 
-    def poll_source(self, start: float, end: float) -> Iterator[Document]:  # Updated return type annotation
+    def poll_source(self, start: float, end: float) -> Iterator[Document]:
         yield from self._load_messages(start_time=start, end_time=end)
