@@ -23,9 +23,9 @@ def test_message_to_document():
         mock_connect.return_value.cursor.return_value = mock_cursor
 
         connector = IMessageConnector()
-        docs = list(connector.load_source())
+        docs = list(connector.load_from_state())
 
-        assert len(docs) == 2  # We have 2 messages in mock data
+        assert len(docs) == 1  # We expect one document per chat
         doc = docs[0]
 
         # Verify document structure
