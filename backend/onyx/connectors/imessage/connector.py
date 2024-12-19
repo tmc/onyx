@@ -73,8 +73,12 @@ class IMessageConnector(LoadConnector, PollConnector):
             current_chat_messages = []
             current_chat_data = {}
 
-            for row in cursor:
+            for row in cursor.fetchall():
                 chat_id, chat_identifier, msg_id, text, body, date, is_from_me, sender = row
+
+                if current_chat_id is None:
+                    current_chat_id = chat_id
+                    current_chat_data = {"chat_identifier": chat_identifier}
 
                 if current_chat_id != chat_id:
                     if current_chat_messages:
