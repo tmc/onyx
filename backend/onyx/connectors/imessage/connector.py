@@ -30,7 +30,7 @@ class IMessageConnector(LoadConnector, PollConnector):
 
     def _load_messages(
         self, start_time: float | None = None, end_time: float | None = None
-    ) -> Iterator[list[Document]]:
+    ) -> Iterator[Document]:  # Updated return type annotation
         if not self.db_path:
             return
 
@@ -82,7 +82,7 @@ class IMessageConnector(LoadConnector, PollConnector):
 
                 if current_chat_id != chat_id:
                     if current_chat_messages:
-                        yield [create_document_from_chat(current_chat_data, current_chat_messages)]
+                        yield create_document_from_chat(current_chat_data, current_chat_messages)
 
                     current_chat_id = chat_id
                     current_chat_data = {"chat_identifier": chat_identifier}
@@ -97,15 +97,15 @@ class IMessageConnector(LoadConnector, PollConnector):
                 })
 
             if current_chat_messages:
-                yield [create_document_from_chat(current_chat_data, current_chat_messages)]
+                yield create_document_from_chat(current_chat_data, current_chat_messages)
 
         finally:
             if self.conn:
                 self.conn.close()
                 self.conn = None
 
-    def load_from_state(self) -> Iterator[list[Document]]:
+    def load_from_state(self) -> Iterator[Document]:  # Updated return type annotation
         yield from self._load_messages()
 
-    def poll_source(self, start: float, end: float) -> Iterator[list[Document]]:
+    def poll_source(self, start: float, end: float) -> Iterator[Document]:  # Updated return type annotation
         yield from self._load_messages(start_time=start, end_time=end)
