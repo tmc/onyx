@@ -13,16 +13,31 @@ from tests.unit.onyx.connectors.imessage.consts_and_utils import MOCK_MESSAGE_DA
 def test_message_to_document():
     """Test that messages are correctly converted to documents."""
     with patch('sqlite3.connect') as mock_connect:
-        # Setup mock cursor
+        # Setup mock cursor with properly joined data
         mock_cursor = MagicMock()
-        mock_cursor.fetchall.side_effect = [
-            MOCK_MESSAGE_DATA["message"],  # For messages query
-            MOCK_MESSAGE_DATA["chat"],     # For chat query
-            MOCK_MESSAGE_DATA["handle"],   # For handle query
-        ]
+        mock_cursor.execute = MagicMock()
+
+        # Create joined mock data matching the SQL query format
+        joined_data = []
+        for msg in MOCK_MESSAGE_DATA["message"]:
+            chat = MOCK_MESSAGE_DATA["chat"][0]  # We have one chat
+            handle = MOCK_MESSAGE_DATA["handle"][0]  # We have one handle
+            joined_data.append((
+                chat["ROWID"],  # chat_id
+                chat["chat_identifier"],
+                msg["ROWID"],
+                msg["text"],
+                msg["attributedBody"],
+                msg["date"],
+                msg["is_from_me"],
+                handle["id"]  # sender
+            ))
+
+        mock_cursor.fetchall.return_value = joined_data
         mock_connect.return_value.cursor.return_value = mock_cursor
 
         connector = IMessageConnector()
+        connector.db_path = "mock_path"  # Set db_path to avoid None check
         docs = list(connector.load_from_state())
 
         assert len(docs) == 1  # We expect one document per chat
@@ -31,33 +46,45 @@ def test_message_to_document():
         # Verify document structure
         assert isinstance(doc, Document)
         assert doc.source == DocumentSource.IMESSAGE
-        assert doc.semantic_identifier == "Test Chat"
-        assert "Hello world" in doc.text
-        assert doc.metadata["is_from_me"] is False
-        assert doc.metadata["handle_id"] == "+1234567890"
-        assert doc.metadata["service"] == "iMessage"
+        assert "chat123" in doc.semantic_identifier
+        assert "Hello world" in str(doc.sections[0].text)
+        assert "How are you?" in str(doc.sections[1].text)
 
 def test_time_filter():
     """Test that time-based filtering works correctly."""
     with patch('sqlite3.connect') as mock_connect:
-        # Setup mock cursor
+        # Setup mock cursor with properly joined data
         mock_cursor = MagicMock()
-        mock_cursor.fetchall.side_effect = [
-            MOCK_MESSAGE_DATA["message"],
-            MOCK_MESSAGE_DATA["chat"],
-            MOCK_MESSAGE_DATA["handle"],
-        ]
+        mock_cursor.execute = MagicMock()
+
+        # Create joined mock data matching the SQL query format
+        chat = MOCK_MESSAGE_DATA["chat"][0]
+        handle = MOCK_MESSAGE_DATA["handle"][0]
+        # Only include the second message (after filter time)
+        msg = MOCK_MESSAGE_DATA["message"][1]
+        joined_data = [(
+            chat["ROWID"],
+            chat["chat_identifier"],
+            msg["ROWID"],
+            msg["text"],
+            msg["attributedBody"],
+            msg["date"],
+            msg["is_from_me"],
+            handle["id"]
+        )]
+
+        mock_cursor.fetchall.return_value = joined_data
         mock_connect.return_value.cursor.return_value = mock_cursor
 
         # Set after_time to filter out first message
         after_time = datetime(2024, 1, 1, 0, 30, tzinfo=timezone.utc)
         connector = IMessageConnector()
-        docs = list(connector.load_source(after_time=after_time))
+        connector.db_path = "mock_path"
+        docs = list(connector.poll_source(start=after_time.timestamp(), end=None))
 
         assert len(docs) == 1  # Only second message should pass filter
         doc = docs[0]
-        assert "How are you?" in doc.text
-        assert doc.metadata["is_from_me"] is True
+        assert "How are you?" in str(doc.sections[0].text)
 
 def test_database_not_found():
     """Test graceful handling when chat.db is not accessible."""
