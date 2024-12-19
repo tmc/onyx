@@ -90,7 +90,7 @@ def test_database_not_found():
     """Test graceful handling when chat.db is not accessible."""
     with patch('sqlite3.connect', side_effect=Exception("Database not found")):
         connector = IMessageConnector()
-        docs = list(connector.load_source())
+        docs = list(connector.load_from_state())
         assert len(docs) == 0
 
 def test_invalid_message_data():
@@ -106,5 +106,5 @@ def test_invalid_message_data():
         mock_connect.return_value.cursor.return_value = mock_cursor
 
         connector = IMessageConnector()
-        docs = list(connector.load_source())
+        docs = list(connector.load_from_state())
         assert len(docs) == 0  # Invalid messages should be skipped
