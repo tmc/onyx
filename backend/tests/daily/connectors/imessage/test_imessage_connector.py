@@ -9,7 +9,7 @@ from onyx.configs.constants import DocumentSource
 from onyx.connectors.imessage.connector import IMessageConnector
 from onyx.connectors.models import Document
 
-from ....unit.onyx.connectors.imessage.consts_and_utils import create_mock_chat_db, MOCK_MESSAGE_DATA
+from tests.unit.onyx.connectors.imessage.consts_and_utils import create_mock_chat_db, MOCK_MESSAGE_DATA
 
 def test_load_messages():
     """Test loading messages from a mock chat.db file."""

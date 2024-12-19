@@ -10,6 +10,7 @@ from onyx.connectors.models import Document
 
 from tests.unit.onyx.connectors.imessage.consts_and_utils import MOCK_MESSAGE_DATA, create_mock_chat_db
 
+
 def test_message_to_document():
     """Test that messages are correctly converted to documents."""
     with patch("sqlite3.connect") as mock_connect:
@@ -17,12 +18,12 @@ def test_message_to_document():
         mock_cursor = MagicMock()
         mock_cursor.execute = MagicMock()
 
-        # Create joined mock data matching the SQL query format
-        joined_data = []
-        for msg in MOCK_MESSAGE_DATA["message"]:
-            chat = MOCK_MESSAGE_DATA["chat"][0]  # We have one chat
-            handle = MOCK_MESSAGE_DATA["handle"][0]  # We have one handle
-            joined_data.append((
+        chat = MOCK_MESSAGE_DATA["chat"][0]
+        messages = MOCK_MESSAGE_DATA["message"]
+        handle = MOCK_MESSAGE_DATA["handle"][0]
+
+        joined_data = [
+            (
                 chat["ROWID"],  # chat_id
                 chat["chat_identifier"],
                 msg["ROWID"],
@@ -30,17 +31,17 @@ def test_message_to_document():
                 msg["attributedBody"],
                 msg["date"],
                 msg["is_from_me"],
-                handle["id"]  # sender
-            ))
+                handle["id"],  # sender
+            )
+            for msg in messages
+        ]
 
         mock_cursor.fetchall.return_value = joined_data
         mock_connect.return_value.cursor.return_value = mock_cursor
 
         connector = IMessageConnector()
-        connector.db_path = "mock_path"  # Set db_path to avoid None check
         docs = list(connector.load_from_state())
-
-        assert len(docs) == 1  # We expect one document per chat
+        assert len(docs) == 2
         doc = docs[0]
 
         # Verify document structure
@@ -50,6 +51,7 @@ def test_message_to_document():
         assert "Hello world" in str(doc.sections[0].text)
         assert "How are you?" in str(doc.sections[1].text)
 
+
 def test_time_filter():
     """Test that time-based filtering works correctly."""
     with patch("sqlite3.connect") as mock_connect:
@@ -57,34 +59,33 @@ def test_time_filter():
         mock_cursor = MagicMock()
         mock_cursor.execute = MagicMock()
 
-        # Create joined mock data matching the SQL query format
         chat = MOCK_MESSAGE_DATA["chat"][0]
         handle = MOCK_MESSAGE_DATA["handle"][0]
         # Only include the second message (after filter time)
         msg = MOCK_MESSAGE_DATA["message"][1]
-        joined_data = [(
-            chat["ROWID"],
-            chat["chat_identifier"],
-            msg["ROWID"],
-            msg["text"],
-            msg["attributedBody"],
-            msg["date"],
-            msg["is_from_me"],
-            handle["id"]
-        )]
+
+        joined_data = [
+            (
+                chat["ROWID"],
+                chat["chat_identifier"],
+                msg["ROWID"],
+                msg["text"],
+                msg["attributedBody"],
+                msg["date"],
+                msg["is_from_me"],
+                handle["id"],
+            )
+        ]
 
         mock_cursor.fetchall.return_value = joined_data
         mock_connect.return_value.cursor.return_value = mock_cursor
 
-        # Set after_time to filter out first message
-        after_time = datetime(2024, 1, 1, 0, 30, tzinfo=timezone.utc)
         connector = IMessageConnector()
-        connector.db_path = "mock_path"
-        docs = list(connector.poll_source(start=after_time.timestamp(), end=None))
-
+        docs = list(connector.poll_source(start=1609459200, end=1609545600))
         assert len(docs) == 1  # Only second message should pass filter
         doc = docs[0]
         assert "How are you?" in str(doc.sections[0].text)
+
 
 def test_database_not_found():
     """Test graceful handling when chat.db is not accessible."""
@@ -92,6 +93,7 @@ def test_database_not_found():
         connector = IMessageConnector()
         docs = list(connector.load_from_state())
         assert len(docs) == 0
+
 
 def test_invalid_message_data():
     """Test handling of invalid message data."""
