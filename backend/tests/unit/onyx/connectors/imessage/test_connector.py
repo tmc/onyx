@@ -8,7 +8,7 @@ from onyx.configs.constants import DocumentSource
 from onyx.connectors.imessage.connector import IMessageConnector
 from onyx.connectors.models import Document
 
-from .consts_and_utils import MOCK_MESSAGE_DATA, create_mock_chat_db
+from tests.unit.onyx.connectors.imessage.consts_and_utils import MOCK_MESSAGE_DATA, create_mock_chat_db
 
 def test_message_to_document():
     """Test that messages are correctly converted to documents."""
