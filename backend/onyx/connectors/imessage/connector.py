@@ -43,6 +43,7 @@ class IMessageConnector(LoadConnector, PollConnector):
                 chat.ROWID as chat_id,
                 chat.chat_identifier,
                 message.ROWID,
+                message.text,
                 message.attributedBody,
                 message.date,
                 message.is_from_me,
@@ -73,7 +74,7 @@ class IMessageConnector(LoadConnector, PollConnector):
             current_chat_data = {}
 
             for row in cursor:
-                chat_id, chat_identifier, msg_id, body, date, is_from_me, sender = row
+                chat_id, chat_identifier, msg_id, text, body, date, is_from_me, sender = row
 
                 if current_chat_id != chat_id:
                     if current_chat_messages:
@@ -84,6 +85,7 @@ class IMessageConnector(LoadConnector, PollConnector):
                     current_chat_messages = []
 
                 current_chat_messages.append({
+                    "text": text,
                     "attributedBody": body,
                     "date": date,
                     "is_from_me": bool(is_from_me),
