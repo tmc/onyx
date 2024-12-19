@@ -137,6 +137,7 @@ class DocumentSource(str, Enum):
     FRESHDESK = "freshdesk"
     FIREFLIES = "fireflies"
     EGNYTE = "egnyte"
+    IMESSAGE = "imessage"
 
 
 DocumentSourceRequiringTenantContext: list[DocumentSource] = [DocumentSource.FILE]
